@@ -165,7 +165,7 @@ function applyState(v){ // 保存データ・バックアップの読み込み�
   Object.values(S.tests).forEach(t=>normHoles(t.holes));
   const cur=TESTS[S.test]?S.test:null;S.test=null;S.holes=[newHole()];S.active=0;
   if(cur)selectTest(cur)}
-let tab='home', stage='c', photoTarget=null, sendBusy=false; // stage: c=確認 / i=検査
+let tab='pick', stage='c', photoTarget=null, sendBusy=false; // stage: c=確認 / i=検査
 
 const DB={
   open(){return new Promise((res,rej)=>{const r=indexedDB.open('llt-check',1);r.onupgradeneeded=()=>{r.result.createObjectStore('kv')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
