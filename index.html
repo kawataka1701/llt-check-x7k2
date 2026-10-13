@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1e293b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="原位置試験">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>原位置試験チェックアプリ</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--sub:#64748b;--line:#e2e8f0;--dark:#1e293b;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Hiragino Sans","Yu Gothic UI",sans-serif;font-size:16px}
+#app{max-width:720px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--dark);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:18px}
+header .sub{font-size:12px;color:#cbd5e1}
+main{flex:1;padding:14px 14px 110px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+nav .in{max-width:720px;margin:0 auto;display:flex}
+nav button{flex:1;border:0;background:none;padding:10px 4px 8px;font-size:11px;font-weight:700;color:#94a3b8;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px}
+nav button span.i{font-size:22px;line-height:1}
+nav button.on{color:var(--blue)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.card>.hd{padding:10px 14px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:var(--sub);display:flex;justify-content:space-between;align-items:center}
+.card>.bd{padding:14px}
+label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:10px 0 4px}
+label:first-child{margin-top:0}
+input[type=text],input[type=email],input[type=date],input[type=number],textarea,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;background:#f8fafc;color:var(--ink);font-family:inherit}
+textarea{min-height:64px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--blue);background:#fff}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.btn{border:0;border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;color:#fff;background:var(--dark);width:100%;min-height:50px;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn.blue{background:var(--blue)}.btn.green{background:var(--green)}.btn.ghost{background:#fff;color:var(--ink);border:1px solid #cbd5e1}.btn.red{background:var(--red)}
+.btn.sm{padding:8px 12px;font-size:13px;min-height:38px;width:auto}
+.stack{display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.chip{flex:none;border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:9px 16px;font-weight:700;font-size:14px;color:var(--sub)}
+.chip.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.bar{height:10px;border-radius:99px;background:#e2e8f0;overflow:hidden}.bar>div{height:100%;background:var(--green);transition:width .3s}
+.caution{background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:12px 14px;margin-bottom:14px}
+.caution h3{margin:0 0 6px;font-size:14px;color:#b91c1c}
+.caution ul{margin:0;padding-left:18px;color:#b91c1c;font-size:14px;line-height:1.6}
+.cat{font-size:13px;font-weight:800;color:var(--sub);margin:18px 2px 8px;letter-spacing:.05em}
+.item .t{font-weight:700;font-size:16px;line-height:1.5;margin:0 0 4px}
+.item .h{font-size:13px;color:var(--sub);margin:0 0 10px}
+.jrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.jrow .who{width:76px;font-size:12px;font-weight:700;color:var(--sub);line-height:1.3}
+.jb{flex:1;padding:12px 0;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font-size:16px;font-weight:700;color:#94a3b8;min-height:48px}
+.jb.ok.on{background:var(--green);border-color:var(--green);color:#fff}
+.jb.ng.on{background:var(--red);border-color:var(--red);color:#fff}
+.badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px}
+.badge.ok{background:#dcfce7;color:#15803d}.badge.ng{background:#fee2e2;color:#b91c1c}.badge.no{background:#f1f5f9;color:#94a3b8}
+.photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.photos .ph{position:relative;width:76px;height:76px}
+.photos img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.photos .x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--red);color:#fff;font-size:14px;line-height:1}
+.warn{color:var(--red);font-size:12px;font-weight:700;margin-top:4px}
+.mlist{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line);background:#fff}
+.mlist:last-child{border:0}.mlist .ic{font-size:26px}.mlist .tt{flex:1;font-weight:700;font-size:15px}.mlist .ss{font-size:12px;color:var(--sub)}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:50;display:flex;flex-direction:column}
+.modal .mh{background:var(--dark);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.modal .mb{flex:1;background:#fff;overflow:auto}
+.modal iframe{width:100%;height:100%;border:0;background:#fff}
+.modal .mf{background:#fff;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:8px}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:12px 22px;border-radius:999px;font-weight:700;z-index:90;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:90%}
+.prose h3{margin:16px 0 6px;font-size:16px}.prose p,.prose li{font-size:14px;line-height:1.7;color:#334155}
+.small{font-size:12px;color:var(--sub);line-height:1.6}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="photoIn" accept="image/*" capture="environment" hidden>
+<input type="file" id="manualIn" accept="application/pdf,image/*" hidden>
+<input type="file" id="restoreIn" accept="application/json" hidden>
+<script>
+"use strict";
+/* ============ 点検項目（原位置試験①（透水試験,LLT）段階検査シート 11-13 のLLT欄に準拠） ============ */
+const ITEMS = [
+  {id:1,cat:'準備工',title:'試験は打ち合わせどおりの深度で行ったか'},
+  {id:2,cat:'準備工',title:'砂質土、砂礫の場合、試験区間の上端深度までケーシングを挿入したか',hint:'ジャーミング防止策は完全か'},
+  {id:3,cat:'準備工',title:'無理な圧力をかけずに試験深度までゾンデが挿入できる状態になっているか',hint:'できなければスライムの除去、余掘り等による対策を実施'},
+  {id:4,cat:'試験実施',title:'土質に合った加圧ステップを選択したか'},
+  {id:5,cat:'試験実施',title:'降伏点を確認したか（25kgf/cm²以下の場合）',value:{label:'降伏圧力',unit:'kgf/cm²',type:'number'}},
+  {id:6,cat:'試験実施',title:'圧力開放時に容積計内の水位の戻りを確認したか'},
+  {id:7,cat:'試験後',title:'試験終了後、ゾンデのセンターパイプの根元は変形していないか'},
+  {id:8,cat:'試験後',title:'ΔH-Pe、Pe-r曲線を確認したか、変形係数の算出',value:{label:'変形係数（単位とも入力）',unit:'',type:'text'}}
+];
+/* 準備工の注意喚起（上記チェックシートの項目内容から作成した固定文。編集する場合はここを変更） */
+const CAUTIONS = [
+  '試験深度は打ち合わせ内容と必ず照合する',
+  '砂質土・砂礫ではジャーミング防止のため、上端深度までケーシングを挿入する',
+  'ゾンデは無理に押し込まない。入らない場合はスライム除去・余掘りで対応する'
+];
+const TITLE = '孔内水平載荷試験';
+const SHEET = '原位置試験① 段階検査シート（LLT）';
+
+/* ============ 状態・保存（IndexedDB） ============ */
+const uid=()=>Math.random().toString(36).slice(2,9);
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const newHole=()=>({id:uid(),holeNo:'',depth:'',confirmer:'',confirmDate:'',inspector:'',inspectDate:'',items:{}});
+let S={project:{no:'',name:'',operator:''},holes:[newHole()],active:0,emailTo:'',manuals:[]};
+let tab='home', stage='c', photoTarget=null, sendBusy=false; // stage: c=確認 / i=検査
+
+const DB={
+  open(){return new Promise((res,rej)=>{const r=indexedDB.open('llt-check',1);r.onupgradeneeded=()=>{r.result.createObjectStore('kv')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async get(k){try{const db=await this.open();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)})}catch(e){return undefined}},
+  async set(k,v){try{const db=await this.open();return await new Promise(res=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>res(false)})}catch(e){return false}},
+  async del(k){try{const db=await this.open();return await new Promise(res=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=()=>res(true)})}catch(e){}}
+};
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>DB.set('state',S),300)}
+async function load(){const v=await DB.get('state');if(v&&v.holes&&v.holes.length){S=Object.assign(S,v);
+  S.holes.forEach(h=>{if(h.date&&!h.confirmDate)h.confirmDate=h.date;delete h.date;['confirmer','confirmDate','inspector','inspectDate'].forEach(k=>{if(h[k]==null)h[k]=''})})}}
+
+/* ============ ユーティリティ ============ */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+const hole=()=>S.holes[S.active]||S.holes[0];
+const hname=(h,n)=>(h&&h.holeNo&&h.holeNo.trim())||`孔${n+1}`; // 孔番号が入力されたら「孔N」の代わりに表示
+function it(h,id){return h.items[id]||(h.items[id]={c:null,i:null,val:'',act:'',ph:[]})}
+function toast(m){const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2600)}
+function progress(h,k){const done=ITEMS.filter(x=>{const r=h.items[x.id];return r&&(k?r[k]:r.c&&r.i)}).length;return{done,total:ITEMS.length,pct:Math.round(done/ITEMS.length*100)}}
+function problems(){ // 送信前の未入力・対策漏れ
+  const p=[];
+  S.holes.forEach((h,n)=>{const nm=hname(h,n);
+    if(!h.holeNo)p.push(nm+'：孔番号が未入力');
+    if(!h.confirmer||!h.confirmDate)p.push(nm+'：確認者・確認日が未入力');
+    if(!h.inspector||!h.inspectDate)p.push(nm+'：検査者・検査日が未入力');
+    ITEMS.forEach(x=>{const r=h.items[x.id]||{};
+      if(!r.c)p.push(`${nm}：項目${x.id} が未確認`);
+      else if(!r.i)p.push(`${nm}：項目${x.id} が未検査`);
+      else if((r.c==='ng'||r.i==='ng')&&!(r.act||'').trim())p.push(`${nm}：項目${x.id} は「否」ですが対策が未入力`)})});
+  return p}
+function fdate(s){if(!s)return'';const [y,m,d]=s.split('-');return `${y}/${+m}/${+d}`}
+function resizeImage(file,max=1280,q=.72){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q))};im.src=fr.result};fr.readAsDataURL(file)})}
+
+/* ============ 画面 ============ */
+function render(){
+  const titles={home:'原位置試験チェック',check:'現場点検',manual:'マニュアル',set:'設定'};
+  const h=hole();
+  $('#app').innerHTML=`
+  <header><div><h1>${titles[tab]}</h1><div class="sub">${TITLE}${S.project.name?' ／ '+esc(S.project.name):''}</div></div>
+   <div class="sub" style="text-align:right">${S.holes.length}孔</div></header>
+  <main>${tab==='home'?vHome():tab==='check'?vCheck():tab==='manual'?vManual():vSet()}</main>
+  <nav><div class="in">
+   ${[['home','🏠','ホーム'],['check','☑️','点検'],['manual','📖','マニュアル'],['set','⚙️','設定']].map(([k,i,l])=>`<button class="${tab===k?'on':''}" data-nav="${k}"><span class="i">${i}</span>${l}</button>`).join('')}
+  </div></nav>`;
+}
+function holeChips(){return `<div class="chips">${S.holes.map((x,i)=>`<button class="chip ${i===S.active?'on':''}" data-hole="${i}">${esc(hname(x,i))}</button>`).join('')}<button class="chip" data-act="addHole">＋孔を追加</button></div>`}
+
+function vHome(){
+  const h=hole(),pg=progress(h);
+  return `
+  <div class="card"><div class="hd">試験基本情報（全孔共通）</div><div class="bd">
+    <div class="row"><div><label>工事番号</label><input type="text" data-p="no" value="${esc(S.project.no)}" placeholder="例: 238〇〇〇"></div>
+    <div><label>略称</label><input type="text" data-p="name" value="${esc(S.project.name)}" placeholder="例: 〇〇ビル"></div></div>
+    <label>オペレーター・試験者</label><input type="text" data-p="operator" value="${esc(S.project.operator)}" placeholder="氏名">
+  </div></div>
+
+  ${holeChips()}
+  <div class="card"><div class="hd"><span id="holeTitle">${esc(hname(h,S.active))} の情報</span>${S.holes.length>1?'<button class="btn red sm" data-act="delHole">この孔を削除</button>':''}</div><div class="bd">
+    <div class="row"><div><label>孔番号</label><input type="text" data-h="holeNo" value="${esc(h.holeNo)}" placeholder="例: BH-1"></div>
+    <div><label>深度 (m)</label><input type="text" inputmode="decimal" data-h="depth" value="${esc(h.depth)}" placeholder="例: 5.50"></div></div>
+    <div class="row"><div><label>確認者（試験者）</label><input type="text" data-h="confirmer" value="${esc(h.confirmer)}" placeholder="${esc(S.project.operator||'氏名')}"></div>
+    <div><label>確認日</label><input type="date" data-h="confirmDate" value="${esc(h.confirmDate)}"></div></div>
+    <div class="row"><div><label>検査者（現場代理人）</label><input type="text" data-h="inspector" value="${esc(h.inspector)}" placeholder="氏名"></div>
+    <div><label>検査日</label><input type="date" data-h="inspectDate" value="${esc(h.inspectDate)}"></div></div>
+  </div></div>
+
+  <div class="card"><div class="bd">
+    ${[['c','確認'],['i','検査']].map(([k,n])=>{const p=progress(h,k);return `<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin:${k==='c'?0:12}px 0 6px"><span>${esc(hname(h,S.active))} ${n}</span><span>${p.done} / ${p.total} 項目</span></div><div class="bar"><div style="width:${p.pct}%"></div></div>`}).join('')}
+  </div></div>
+
+  <div class="stack">
+    <button class="btn blue" data-nav="check">☑️ 点検を始める／続ける</button>
+    <button class="btn green" data-act="preview">📤 チェックシートを確認して送信</button>
+  </div>`;
+}
+
+function itemCard(x,h){
+  const r=it(h,x.id),ng=r.c==='ng'||r.i==='ng',done=r.c&&r.i;
+  const bd=ng?'<span class="badge ng">要対策</span>':done?'<span class="badge ok">完了</span>':'<span class="badge no">未完了</span>';
+  const jr=(k,who)=>`<div class="jrow"><div class="who">${who}</div>
+    <button class="jb ok ${r[k]==='ok'?'on':''}" data-j="${x.id}|${k}|ok">○ 良</button>
+    <button class="jb ng ${r[k]==='ng'?'on':''}" data-j="${x.id}|${k}|ng">✕ 否</button></div>`;
+  return `<div class="card item"><div class="hd"><span>No.${x.id}</span>${bd}</div><div class="bd">
+    <p class="t">${esc(x.title)}</p>${x.hint?`<p class="h">※${esc(x.hint)}</p>`:'<div style="height:6px"></div>'}
+    ${x.value?`<label>${esc(x.value.label)}${x.value.unit?' ('+esc(x.value.unit)+')':''}</label><input type="${x.value.type==='number'?'number':'text'}" ${x.value.type==='number'?'inputmode="decimal" step="any"':''} data-v="${x.id}" value="${esc(r.val)}" style="margin-bottom:10px">`:''}
+    ${stage==='c'?jr('c','確認<br>（試験者）'):jr('i','検査<br>（現場代理人）')}
+    <div class="small">${stage==='c'?'検査':'確認'}: ${(stage==='c'?r.i:r.c)==='ok'?'○ 良':(stage==='c'?r.i:r.c)==='ng'?'✕ 否':'未実施'}</div>
+    ${ng?`<label>対策（否の場合は必須）</label><textarea data-a="${x.id}" placeholder="実施した対策・是正内容">${esc(r.act)}</textarea>${(r.act||'').trim()?'':'<div class="warn">対策を入力してください</div>'}`:''}
+    ${ng?`<div class="photos">${r.ph.map((p,i)=>`<div class="ph"><img src="${p}" data-view="${x.id}|${i}"><button class="x" data-delph="${x.id}|${i}">×</button></div>`).join('')}</div>
+    <div style="margin-top:10px"><button class="btn ghost sm" data-ph="${x.id}">📷 写真を撮る／選ぶ${r.ph.length?'（'+r.ph.length+'枚）':''}</button></div>`:''}
+  </div></div>`;
+}
+function vCheck(){
+  const h=hole(),pg=progress(h,stage);let cat='',out='';
+  const who=stage==='c'?'confirmer':'inspector',dt=stage==='c'?'confirmDate':'inspectDate',nm=stage==='c'?'確認':'検査';
+  ITEMS.forEach(x=>{
+    if(x.cat!==cat){cat=x.cat;out+=`<div class="cat">■ ${cat}</div>`;
+      if(cat==='準備工')out+=`<div class="caution"><h3>⚠ 準備工の注意喚起</h3><ul>${CAUTIONS.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`}
+    out+=itemCard(x,h)});
+  return `${holeChips()}
+  <div class="chips" style="margin-bottom:8px"><button class="chip ${stage==='c'?'on':''}" style="flex:1" data-stage="c">① 確認（試験者）</button><button class="chip ${stage==='i'?'on':''}" style="flex:1" data-stage="i">② 検査（現場代理人）</button></div>
+  <div class="card"><div class="bd" style="padding:10px 14px">
+    <div class="row"><div><label>${nm}者</label><input type="text" data-h="${who}" value="${esc(h[who])}" placeholder="氏名"></div><div><label>${nm}日</label><input type="date" data-h="${dt}" value="${esc(h[dt])}"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin:12px 0 6px"><span>${esc(hname(h,S.active))} ${nm}</span><span>${pg.done} / ${pg.total}</span></div><div class="bar"><div style="width:${pg.pct}%"></div></div></div></div>
+  ${out}
+  <div class="stack"><button class="btn" data-act="saveNow">💾 一時保存</button><button class="btn green" data-act="preview">📤 チェックシートを確認して送信</button></div>`;
+}
+
+/* ---- マニュアル ---- */
+function builtinManual(){
+  return `<div class="prose"><h3>孔内水平載荷試験（LLT）点検要点</h3>
+  <p>原位置試験段階検査シート（LLT欄）の確認項目を、実施順に整理したものです。</p>
+  ${['準備工','試験実施','試験後'].map(c=>`<h3>${c}</h3><ul>${ITEMS.filter(x=>x.cat===c).map(x=>`<li>${esc(x.title)}${x.hint?'<br><span class="small">※'+esc(x.hint)+'</span>':''}</li>`).join('')}</ul>`).join('')}
+  <h3>記録の運用</h3><ul>
+  <li>各項目について、試験者が「確認」、現場代理人が「検査」を行う。</li>
+  <li>「否」となった項目は必ず対策を記録する。</li>
+  <li>必要に応じて、写真を項目ごとに添付する。</li></ul></div>`}
+function vManual(){
+  return `<div class="card"><div class="bd" style="padding:0">
+    <div class="mlist" data-man="builtin"><div class="ic">📘</div><div><div class="tt">${TITLE} 点検要点（内蔵）</div><div class="ss">チェックシート項目の整理</div></div></div>
+    ${S.manuals.map(m=>`<div class="mlist" data-man="${m.id}"><div class="ic">${m.type==='application/pdf'?'📄':'🖼️'}</div><div style="flex:1"><div class="tt">${esc(m.name)}</div><div class="ss">登録: ${esc(m.added)}</div></div><button class="btn red sm" data-delman="${m.id}">削除</button></div>`).join('')}
+  </div></div>
+  <button class="btn blue" data-act="addManual">＋ PDF・画像のマニュアルを登録</button>
+  <p class="small">登録したファイルはこの端末内に保存され、オフラインでも開けます。施工要領書や機器の取扱説明書を登録してください。</p>`;
+}
+async function openManual(id){
+  let body='',title='',blobUrl='';
+  if(id==='builtin'){title=TITLE+' 点検要点';body=`<div style="padding:16px;max-width:720px;margin:0 auto">${builtinManual()}</div>`}
+  else{const m=S.manuals.find(x=>x.id===id),b=await DB.get('man:'+id);if(!b){toast('ファイルが見つかりません');return}
+    title=m.name;blobUrl=URL.createObjectURL(new Blob([b],{type:m.type}));
+    body=m.type==='application/pdf'?`<iframe src="${blobUrl}"></iframe>`:`<img src="${blobUrl}" style="width:100%">`}
+  const d=document.createElement('div');d.className='modal';
+  d.innerHTML=`<div class="mh"><button class="btn ghost sm" id="mc">← 戻る</button><b style="font-size:14px;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(title)}</b>${blobUrl?`<a class="btn ghost sm" style="text-decoration:none;display:inline-flex;align-items:center" href="${blobUrl}" target="_blank">別画面</a>`:'<span style="width:60px"></span>'}</div><div class="mb">${body}</div>`;
+  document.body.appendChild(d);$('#mc').onclick=()=>{d.remove();if(blobUrl)URL.revokeObjectURL(blobUrl)};
+}
+
+/* ---- 設定 ---- */
+function vSet(){return `
+  <div class="card"><div class="hd">送信先メールアドレス</div><div class="bd">
+    <label>宛先（複数はカンマ区切り）</label><input type="text" inputmode="email" data-s="emailTo" value="${esc(S.emailTo)}" placeholder="example@company.co.jp">
+    <p class="small">「送信」時、この宛先でメール作成画面を開きます。</p></div></div>
+  <div class="card"><div class="hd">データ管理</div><div class="bd stack">
+    <button class="btn ghost" data-act="backup">💾 全データをファイルに書き出し（バックアップ）</button>
+    <button class="btn ghost" data-act="restore">📂 バックアップから復元</button>
+    <button class="btn red" data-act="reset">🗑 点検データをすべて消去</button>
+    <p class="small">入力内容は自動的にこの端末内（ブラウザ）へ保存されます。端末の「閲覧データ消去」を行うと消えるため、重要な記録はバックアップしてください。</p></div></div>`}
+
+/* ============ レポート生成 ============ */
+function reportHTML(){
+  const cell=(h,x,k)=>{const r=h.items[x.id]||{};return r[k]==='ok'?'○':r[k]==='ng'?'×':''};
+  const chunks=[];for(let i=0;i<S.holes.length;i+=3)chunks.push(S.holes.slice(i,i+3));
+  const photoSec=[];
+  S.holes.forEach((h,n)=>ITEMS.forEach(x=>{const r=h.items[x.id];if(r&&r.ph&&r.ph.length)photoSec.push({n,h,x,ph:r.ph})}));
+  const tables=chunks.map(g=>{
+    const pad=[...g];while(pad.length<3)pad.push(null);
+    return `<table><tr><th colspan="3" rowspan="1">項目</th>${pad.map(h=>`<th colspan="3">${h?'孔 '+esc(h.holeNo||'—'):''}</th>`).join('')}</tr>
+    <tr><td colspan="3">深度</td>${pad.map(h=>`<td colspan="3" class="c">${h&&h.depth?esc(h.depth)+' m':''}</td>`).join('')}</tr>
+    <tr><td colspan="3">確認者（試験者）／確認日</td>${pad.map(h=>`<td colspan="3" class="c">${h?esc(h.confirmer||S.project.operator)+' ／ '+fdate(h.confirmDate):''}</td>`).join('')}</tr>
+    <tr><td colspan="3">検査者（現場代理人）／検査日</td>${pad.map(h=>`<td colspan="3" class="c">${h?esc(h.inspector)+' ／ '+fdate(h.inspectDate):''}</td>`).join('')}</tr>
+    <tr class="g"><th colspan="2">確認・検査項目</th><th>No</th>${pad.map(()=>'<th>確認</th><th>検査</th><th>対策</th>').join('')}</tr>
+    ${ITEMS.map(x=>`<tr><td class="cat">${x.id===1?'LLT':''}</td><td class="tt">${esc(x.title)}${x.hint?'<br><small>※'+esc(x.hint)+'</small>':''}</td><td class="c">${x.id}</td>
+      ${pad.map(h=>{if(!h)return'<td></td><td></td><td></td>';const r=h.items[x.id]||{};const val=r.val?`<div class="v">${esc(x.value.label.split('（')[0])}: ${esc(r.val)}${x.value.unit?' '+esc(x.value.unit):''}</div>`:'';
+        return `<td class="c ${r.c==='ng'?'ng':''}">${cell(h,x,'c')}</td><td class="c ${r.i==='ng'?'ng':''}">${cell(h,x,'i')}${val}</td><td class="act">${esc(r.act||'')}</td>`}).join('')}</tr>`).join('')}
+    </table>`}).join('<div style="height:14px"></div>');
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${SHEET} ${esc(S.project.name)}</title>
+  <style>body{font-family:"Yu Gothic","Hiragino Sans",sans-serif;margin:14px;color:#000;font-size:11px}h1{font-size:16px;text-align:center;border-bottom:2px solid #000;padding-bottom:6px}
+  .meta{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0 12px;font-size:12px}.meta b{margin-right:4px}
+  table{border-collapse:collapse;width:100%;table-layout:auto}td,th{border:1px solid #000;padding:3px 4px;vertical-align:middle}th{background:#e5e7eb}.g th{background:#f3f4f6}
+  .c{text-align:center;font-size:13px}.ng{color:#c00;font-weight:bold}.tt{min-width:150px}.act{font-size:9px;min-width:50px}.cat{writing-mode:vertical-rl;text-align:center;font-weight:bold;width:18px}.v{font-size:9px;color:#333}small{color:#444}
+  h2{font-size:13px;border-left:4px solid #000;padding-left:6px;margin:18px 0 6px}.ph{display:inline-block;margin:0 8px 8px 0}.ph img{height:150px;border:1px solid #999}.ph div{font-size:9px}
+  @media print{body{margin:6mm}.nop{display:none}}</style></head><body>
+  <h1>${SHEET}</h1>
+  <div class="meta"><span><b>工事番号:</b>${esc(S.project.no)||'—'}</span><span><b>略称:</b>${esc(S.project.name)||'—'}</span><span><b>オペレーター・試験者:</b>${esc(S.project.operator)||'—'}</span><span><b>作成:</b>${new Date().toLocaleString('ja-JP')}</span></div>
+  ${tables}
+  ${photoSec.length?'<h2>添付写真</h2>'+photoSec.map(p=>`<div class="ph"><img src="${p.ph[0]}">${p.ph.slice(1).map(q=>`<img src="${q}">`).join('')}<div>${esc(hname(p.h,p.n))} ／ No.${p.x.id} ${esc(p.x.title.slice(0,24))}</div></div>`).join(''):''}
+  </body></html>`}
+function mailBody(){
+  const ng=[];S.holes.forEach(h=>ITEMS.forEach(x=>{const r=h.items[x.id]||{};if(r.c==='ng'||r.i==='ng')ng.push(`・${hname(h,S.holes.indexOf(h))} No.${x.id} ${x.title}／対策: ${r.act||'未記入'}`)}));
+  return `${SHEET} を送信します。\n\n工事番号: ${S.project.no}\n略称: ${S.project.name}\n試験者: ${S.project.operator}\n孔: ${S.holes.map(h=>(h.holeNo||'—')+(h.depth?'('+h.depth+'m)':'')).join(', ')}\n\n【否の項目】\n${ng.length?ng.join('\n'):'なし'}\n\n※詳細は添付のチェックシート（HTMLファイル）をご確認ください。`}
+const fileBase=()=>`LLT段階検査_${(S.project.no||'工事番号未入力').replace(/[\\/:*?"<>|]/g,'')}_${today()}`;
+
+async function preview(){
+  const d=document.createElement('div');d.className='modal';
+  const pb=problems();
+  d.innerHTML=`<div class="mh"><button class="btn ghost sm" id="rc">← 戻る</button><b style="font-size:14px">送信前プレビュー</b><span style="width:60px"></span></div>
+   ${pb.length?`<div style="background:#fef3c7;color:#92400e;padding:8px 14px;font-size:12px;max-height:84px;overflow:auto"><b>⚠ 未完了があります（${pb.length}件）</b><br>${pb.slice(0,6).map(esc).join('<br>')}${pb.length>6?'<br>…ほか':''}</div>`:''}
+   <div class="mb"><iframe id="rf"></iframe></div>
+   <div class="mf"><button class="btn ghost" id="rp">🖨 印刷/PDF</button><button class="btn blue" id="rs">📧 メールで送信</button></div>`;
+  document.body.appendChild(d);$('#rf').srcdoc=reportHTML();
+  $('#rc').onclick=()=>d.remove();
+  $('#rp').onclick=()=>{const f=$('#rf').contentWindow;f.focus();f.print()};
+  $('#rs').onclick=async()=>{
+    if(!S.emailTo.trim()){toast('設定で送信先メールアドレスを入力してください');return}
+    if(pb.length&&!confirm(`未完了が${pb.length}件あります。このまま送信しますか？`))return;
+    await sendMail()};
+}
+async function sendMail(){
+  const html=reportHTML(),name=fileBase()+'.html';
+  const file=new File([html],name,{type:'text/html'});
+  const subject=`【${SHEET}】${S.project.no} ${S.project.name}`.trim();
+  // スマホ: 共有シート経由でメールアプリにファイル添付（宛先は共有先で選択）
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:subject,text:`送信先: ${S.emailTo}\n\n`+mailBody()});toast('共有しました');return}catch(e){if(e.name==='AbortError')return}}
+  // PC等: ファイルを保存し、メール作成画面を開く（保存したファイルを手動で添付）
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();
+  location.href=`mailto:${encodeURIComponent(S.emailTo.trim()).replace(/%2C/gi,',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody()+'\n\n（ダウンロードした「'+name+'」を添付してください）')}`;
+  toast('ファイルを保存しました。メールに添付してください');
+}
+
+/* ============ イベント ============ */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-nav],[data-stage],[data-hole],[data-act],[data-j],[data-ph],[data-delph],[data-view],[data-man],[data-delman]');if(!t)return;
+  const D=t.dataset;
+  if(D.nav){tab=D.nav;render();scrollTo(0,0)}
+  else if(D.stage){stage=D.stage;render();scrollTo(0,0)}
+  else if(D.hole!==undefined){S.active=+D.hole;save();render()}
+  else if(D.j){const [id,k,v]=D.j.split('|');const r=it(hole(),+id);r[k]=r[k]===v?null:v;
+    const dk=k==='c'?'confirmDate':'inspectDate';if(r[k]&&!hole()[dk])hole()[dk]=today(); // 初回の判定時に日付を自動入力
+    save();const y=scrollY;render();scrollTo(0,y)}
+  else if(D.ph){photoTarget=+D.ph;$('#photoIn').click()}
+  else if(D.delph){const [id,i]=D.delph.split('|');if(confirm('この写真を削除しますか？')){it(hole(),+id).ph.splice(+i,1);save();const y=scrollY;render();scrollTo(0,y)}}
+  else if(D.view){const [id,i]=D.view.split('|');const d=document.createElement('div');d.className='modal';d.onclick=()=>d.remove();d.innerHTML=`<div class="mb" style="background:#000;display:flex;align-items:center"><img src="${it(hole(),+id).ph[+i]}" style="width:100%"></div>`;document.body.appendChild(d)}
+  else if(D.man)openManual(D.man);
+  else if(D.delman){e.stopPropagation();if(confirm('このマニュアルを削除しますか？')){await DB.del('man:'+D.delman);S.manuals=S.manuals.filter(m=>m.id!==D.delman);save();render()}}
+  else if(D.act==='addHole'){S.holes.push(newHole());S.active=S.holes.length-1;save();render()}
+  else if(D.act==='delHole'){if(confirm(`${hname(hole(),S.active)}のデータを削除しますか？`)){S.holes.splice(S.active,1);S.active=Math.max(0,S.active-1);save();render()}}
+  else if(D.act==='saveNow'){await DB.set('state',S);toast('保存しました')}
+  else if(D.act==='preview')preview();
+  else if(D.act==='addManual')$('#manualIn').click();
+  else if(D.act==='backup'){const b=new Blob([JSON.stringify({state:S,man:await Promise.all(S.manuals.map(async m=>({id:m.id,data:await blobToB64(await DB.get('man:'+m.id))})))})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fileBase()+'_backup.json';a.click()}
+  else if(D.act==='restore')$('#restoreIn').click();
+  else if(D.act==='reset'){if(confirm('点検データ（孔・写真）をすべて消去します。よろしいですか？\n（送信先・登録マニュアルは残ります）')){S.holes=[newHole()];S.active=0;S.project={no:'',name:'',operator:''};save();render();toast('消去しました')}}
+});
+document.addEventListener('input',e=>{
+  const t=e.target,D=t.dataset;
+  if(D.p!==undefined){S.project[D.p]=t.value}
+  else if(D.h){hole()[D.h]=t.value;if(D.h==='holeNo'){document.querySelectorAll('[data-hole].on').forEach(b=>b.textContent=hname(hole(),S.active));const ht=$('#holeTitle');if(ht)ht.textContent=hname(hole(),S.active)+' の情報'}}
+  else if(D.v)it(hole(),+D.v).val=t.value;
+  else if(D.a)it(hole(),+D.a).act=t.value;
+  else if(D.s)S[D.s]=t.value;
+  else return;
+  save();
+});
+$('#photoIn').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f||photoTarget==null)return;
+  try{const url=await resizeImage(f);it(hole(),photoTarget).ph.push(url);save();const y=scrollY;render();scrollTo(0,y);toast('写真を追加しました')}catch(err){toast('写真の読み込みに失敗しました')}});
+$('#manualIn').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  const id=uid();await DB.set('man:'+id,await f.arrayBuffer());S.manuals.push({id,name:f.name,type:f.type||'application/pdf',added:today()});save();render();toast('マニュアルを登録しました')});
+$('#restoreIn').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const j=JSON.parse(await f.text());if(!j.state)throw 0;if(!confirm('現在のデータを上書きして復元します。よろしいですか？'))return;
+    S=Object.assign(S,j.state);for(const m of (j.man||[]))await DB.set('man:'+m.id,b64ToBuf(m.data));await DB.set('state',S);render();toast('復元しました')}catch(err){toast('復元に失敗しました')}});
+function blobToB64(buf){return new Promise(r=>{if(!buf)return r('');const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.readAsDataURL(new Blob([buf]))})}
+function b64ToBuf(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer}
+
+load().then(render);
+if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
