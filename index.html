@@ -599,7 +599,10 @@ function blobToB64(buf){return new Promise(r=>{if(!buf)return r('');const fr=new
 function b64ToBuf(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer}
 
 load().then(render);
-if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){
+  const hadSW=!!navigator.serviceWorker.controller; // 新しい版に切り替わったら、一度だけ自動で読み込み直す
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadSW&&!window.__reloaded){window.__reloaded=1;location.reload()}});
+  navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{})}
 </script>
 </body>
 </html>
