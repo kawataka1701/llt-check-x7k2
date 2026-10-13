@@ -17,6 +17,8 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",
 header{background:var(--dark);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center}
 header h1{margin:0;font-size:18px}
 header .sub{font-size:12px;color:#cbd5e1}
+.hbtn{border:1px solid #64748b;background:#334155;color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;min-height:44px;display:flex;flex-direction:column;align-items:center;line-height:1.3}
+.hbtn small{font-size:10px;font-weight:400;color:#cbd5e1}
 main{flex:1;padding:14px 14px 110px}
 nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
 nav .in{max-width:720px;margin:0 auto;display:flex}
@@ -86,31 +88,83 @@ table.tbl{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}.tbl t
 <input type="file" id="restoreIn" accept="application/json" hidden>
 <script>
 "use strict";
-/* ============ 点検項目（原位置試験①（透水試験,LLT）段階検査シート 11-13 のLLT欄に準拠） ============ */
-const ITEMS = [
-  {id:1,cat:'準備工',title:'試験は打ち合わせどおりの深度で行ったか'},
-  {id:2,cat:'準備工',title:'砂質土、砂礫の場合、試験区間の上端深度までケーシングを挿入したか',hint:'ジャーミング防止策は完全か'},
-  {id:3,cat:'準備工',title:'無理な圧力をかけずに試験深度までゾンデが挿入できる状態になっているか',hint:'できなければスライムの除去、余掘り等による対策を実施'},
-  {id:4,cat:'試験実施',title:'土質に合った加圧ステップを選択したか'},
-  {id:5,cat:'試験実施',title:'降伏点を確認したか（25kgf/cm²以下の場合）',value:{label:'降伏圧力',unit:'kgf/cm²',type:'number'}},
-  {id:6,cat:'試験実施',title:'圧力開放時に容積計内の水位の戻りを確認したか'},
-  {id:7,cat:'試験後',title:'試験終了後、ゾンデのセンターパイプの根元は変形していないか'},
-  {id:8,cat:'試験後',title:'ΔH-Pe、Pe-r曲線を確認したか、変形係数の算出',value:{label:'変形係数（単位とも入力）',unit:'',type:'text'}}
-];
-/* 準備工の注意喚起（上記チェックシートの項目内容から作成した固定文。編集する場合はここを変更） */
-const CAUTIONS = [
-  '試験深度は打ち合わせ内容と必ず照合する',
-  '砂質土・砂礫ではジャーミング防止のため、上端深度までケーシングを挿入する',
-  'ゾンデは無理に押し込まない。入らない場合はスライム除去・余掘りで対応する'
-];
-const TITLE = '孔内水平載荷試験';
-const SHEET = '原位置試験① 段階検査シート（LLT）';
+/* ============ 試験種別と点検項目（原位置試験段階検査シート（技）11-13〜11-16 に準拠） ============ */
+const V=(label,unit,type)=>({label,unit,type});
+const TESTS = {
+  llt:{name:'孔内水平載荷試験',short:'LLT',sheet:'原位置試験① 段階検査シート（LLT）',icon:'📏',no:'11-13',
+    items:[
+      {id:1,cat:'準備工',title:'試験は打ち合わせどおりの深度で行ったか'},
+      {id:2,cat:'準備工',title:'砂質土、砂礫の場合、試験区間の上端深度までケーシングを挿入したか',hint:'ジャーミング防止策は完全か'},
+      {id:3,cat:'準備工',title:'無理な圧力をかけずに試験深度までゾンデが挿入できる状態になっているか',hint:'できなければスライムの除去、余掘り等による対策を実施'},
+      {id:4,cat:'試験実施',title:'土質に合った加圧ステップを選択したか'},
+      {id:5,cat:'試験実施',title:'降伏点を確認したか（25kgf/cm²以下の場合）',value:V('降伏圧力','kgf/cm²','number')},
+      {id:6,cat:'試験実施',title:'圧力開放時に容積計内の水位の戻りを確認したか'},
+      {id:7,cat:'試験後',title:'試験終了後、ゾンデのセンターパイプの根元は変形していないか'},
+      {id:8,cat:'試験後',title:'ΔH-Pe、Pe-r曲線を確認したか、変形係数の算出',value:V('変形係数（単位とも入力）','','text')}],
+    cautions:['試験深度は打ち合わせ内容と必ず照合する','砂質土・砂礫ではジャーミング防止のため、上端深度までケーシングを挿入する','ゾンデは無理に押し込まない。入らない場合はスライム除去・余掘りで対応する']},
+  perm:{name:'透水試験',short:'透水',sheet:'原位置試験① 段階検査シート（透水試験：ピエゾメーター法）',icon:'💧',no:'11-13',
+    items:[
+      {id:1,cat:'準備工',title:'試験は打ち合わせどおりの深度で行ったか'},
+      {id:2,cat:'準備工',title:'試験区間は清水掘進を行ったか（泥水掘進は禁止とする）'},
+      {id:3,cat:'準備工',title:'地盤の条件に合った試験方法を選択したか',hint:'シートの添付図（ボーリング孔を利用した透水試験 参考図）を参考にする'},
+      {id:4,cat:'準備工',title:'試験孔は清水で洗浄を行ったか'},
+      {id:5,cat:'準備工',title:'試験区間の長さと試験孔の直径の比は、不圧帯水層では4以上、被圧帯水層では2以上あるか'},
+      {id:6,cat:'試験実施',title:'試験実施前の安定水位であることを確認したか'},
+      {id:7,cat:'試験実施',title:'平衡水位を確認したか'},
+      {id:8,cat:'試験実施',title:'試験区間の形状・長さが維持されていたことを確認したか'},
+      {id:9,cat:'試験後',title:'試験データの確認を行ったか、透水係数の算出',value:V('透水係数（単位とも入力）','','text')}],
+    cautions:['試験区間の掘進は清水で行う（泥水掘進は禁止）','試験孔は清水で洗浄する','試験区間長と孔径の比を確認する（不圧帯水層4以上、被圧帯水層2以上）']},
+  lug:{name:'ルジオン試験',short:'ルジオン',sheet:'原位置試験② 段階検査シート（ルジオン試験）',icon:'🔩',no:'11-14',
+    items:[
+      {id:1,cat:'準備工',title:'試験孔は既存の横坑やボーリング孔などの影響を受けない範囲に選定したか'},
+      {id:2,cat:'準備工',title:'試験は打ち合わせどおりの深度・区間長で行ったか'},
+      {id:3,cat:'準備工',title:'試験区間の掘削は清水で行ったか'},
+      {id:4,cat:'準備工',title:'孔内の洗浄を行ったか'},
+      {id:5,cat:'試験実施',title:'パッカーが孔壁に密着しているか確認したか'},
+      {id:6,cat:'試験実施',title:'試験水は清水を利用したか'},
+      {id:7,cat:'試験実施',title:'孔内水位を計測したか'},
+      {id:8,cat:'試験後',title:'P-Q曲線を確認したか、ルジオン値の算出',value:V('ルジオン値（Lu）','Lu','text')}],
+    cautions:['既存の横坑・ボーリング孔の影響を受けない位置を選ぶ','試験深度・区間長は打ち合わせ内容と照合する','試験区間の掘削は清水で行い、孔内を洗浄する']},
+  jft:{name:'JFT試験',short:'JFT',sheet:'原位置試験② 段階検査シート（JFT試験）',icon:'🧪',no:'11-14',
+    items:[
+      {id:1,cat:'準備工',title:'試験は打ち合わせどおりの深度・区間長で行ったか'},
+      {id:2,cat:'準備工',title:'プローブを地上に置いた状態で圧力の0調整を行ったか'},
+      {id:3,cat:'試験実施',title:'パッカーが孔壁に密着しているか確認したか'},
+      {id:4,cat:'試験実施',title:'孔内水位を計測したか'},
+      {id:5,cat:'試験後',title:'T-S曲線を確認したか、透水係数の算出',value:V('透水係数（単位とも入力）','','text')}],
+    cautions:['試験深度・区間長は打ち合わせ内容と照合する','プローブを地上に置いた状態で、圧力の0調整を行う']},
+  ela:{name:'エラストメーター試験',short:'エラスト',sheet:'原位置試験④ 段階検査シート（エラスト）',icon:'🪨',no:'11-16',
+    items:[
+      {id:1,cat:'準備工',title:'試験区間の地層状況について打ち合わせたか（岩級区分等）'},
+      {id:2,cat:'準備工',title:'試験は打ち合わせどおりの深度で行ったか'},
+      {id:3,cat:'準備工',title:'破砕状の地層の場合、試験区間の上端深度までケーシングを挿入したか',hint:'ジャーミング防止策は完全か'},
+      {id:4,cat:'試験実施',title:'岩盤の硬さに合った加圧ステップを選択したか'},
+      {id:5,cat:'試験実施',title:'降伏点を確認したか（200kgf/cm²以下の場合）',value:V('降伏圧力','kgf/cm²','number')},
+      {id:6,cat:'試験実施',title:'圧力開放時に変位量が初期状態まで戻ったことを確認したか'},
+      {id:7,cat:'試験後',title:'P-r曲線を確認したか、変形係数の算出',value:V('変形係数（単位とも入力）','','text')}],
+    cautions:['試験区間の地層状況（岩級区分等）を事前に打ち合わせる','試験深度は打ち合わせ内容と必ず照合する','破砕状の地層ではジャーミング防止のため、上端深度までケーシングを挿入する']}
+};
+/* 準備工の注意喚起は、各試験シートの準備工の項目内容から作成した固定文（編集する場合は上の cautions を変更） */
+let ITEMS=TESTS.llt.items, CAUTIONS=TESTS.llt.cautions, TITLE='', SHEET='';
 
 /* ============ 状態・保存（IndexedDB） ============ */
 const uid=()=>Math.random().toString(36).slice(2,9);
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const newHole=()=>({id:uid(),holeNo:'',depth:'',confirmer:'',confirmDate:'',inspector:'',inspectDate:'',items:{}});
-let S={project:{no:'',name:'',operator:''},holes:[newHole()],active:0,emailTo:'',manuals:[]};
+let S={project:{no:'',name:'',operator:''},test:null,tests:{},holes:[newHole()],active:0,emailTo:'',manuals:[]};
+/* S.holes / S.active は「選択中の試験」の孔データ。S.tests[試験ID] に試験ごとに保管する */
+function syncTests(){if(S.test)S.tests[S.test]={holes:S.holes,active:S.active}}
+function selectTest(id){
+  syncTests();const d=TESTS[id];S.test=id;const t=S.tests[id];
+  S.holes=t&&t.holes.length?t.holes:[newHole()];S.active=t?Math.min(t.active||0,S.holes.length-1):0;
+  ITEMS=d.items;CAUTIONS=d.cautions;TITLE=d.name;SHEET=d.sheet;stage='c';syncTests()}
+function normHoles(hs){hs.forEach(h=>{if(h.date&&!h.confirmDate)h.confirmDate=h.date;delete h.date;['confirmer','confirmDate','inspector','inspectDate'].forEach(k=>{if(h[k]==null)h[k]=''})})}
+function applyState(v){ // 保存データ・バックアップの読み込み（旧版の孔データは孔内水平載荷試験として引き継ぐ）
+  S=Object.assign(S,v);S.tests=S.tests||{};
+  if(!Object.keys(S.tests).length&&v.holes&&v.holes.length){S.tests.llt={holes:v.holes,active:v.active||0};if(!v.test)S.test='llt'}
+  Object.values(S.tests).forEach(t=>normHoles(t.holes));
+  const cur=TESTS[S.test]?S.test:null;S.test=null;S.holes=[newHole()];S.active=0;
+  if(cur)selectTest(cur)}
 let tab='home', stage='c', photoTarget=null, sendBusy=false; // stage: c=確認 / i=検査
 
 const DB={
@@ -120,9 +174,8 @@ const DB={
   async del(k){try{const db=await this.open();return await new Promise(res=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=()=>res(true)})}catch(e){}}
 };
 let saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>DB.set('state',S),300)}
-async function load(){const v=await DB.get('state');if(v&&v.holes&&v.holes.length){S=Object.assign(S,v);
-  S.holes.forEach(h=>{if(h.date&&!h.confirmDate)h.confirmDate=h.date;delete h.date;['confirmer','confirmDate','inspector','inspectDate'].forEach(k=>{if(h[k]==null)h[k]=''})})}}
+function save(){syncTests();clearTimeout(saveT);saveT=setTimeout(()=>DB.set('state',S),300)}
+async function load(){const v=await DB.get('state');if(v&&((v.holes&&v.holes.length)||v.tests))applyState(v)}
 
 /* ============ ユーティリティ ============ */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -148,22 +201,40 @@ function resizeImage(file,max=1280,q=.72){return new Promise((res,rej)=>{const f
 
 /* ============ 画面 ============ */
 function render(){
-  const titles={home:'原位置試験チェック',check:'現場点検',manual:'マニュアル',set:'設定'};
+  const titles={pick:'試験の選択',home:'原位置試験チェック',check:'現場点検',manual:'マニュアル',set:'設定'};
+  if(!S.test)tab='pick';
   const h=hole();
   $('#app').innerHTML=`
-  <header><div><h1>${titles[tab]}</h1><div class="sub">${TITLE}${S.project.name?' ／ '+esc(S.project.name):''}</div></div>
-   <div class="sub" style="text-align:right">${S.holes.length}孔</div></header>
-  <main>${tab==='home'?vHome():tab==='check'?vCheck():tab==='manual'?vManual():vSet()}</main>
-  <nav><div class="in">
+  <header><div><h1>${titles[tab]}</h1><div class="sub">${S.test?esc(TITLE)+(S.project.name?' ／ '+esc(S.project.name):''):'チェックする試験を選んでください'}</div></div>
+   ${S.test&&tab!=='pick'?`<button class="hbtn" data-nav="pick">⇄ 試験選択<small>${S.holes.length}孔</small></button>`:''}</header>
+  <main>${tab==='pick'?vPick():tab==='home'?vHome():tab==='check'?vCheck():tab==='manual'?vManual():vSet()}</main>
+  ${!S.test?'':`<nav><div class="in">
    ${[['home','🏠','ホーム'],['check','☑️','点検'],['manual','📖','マニュアル'],['set','⚙️','設定']].map(([k,i,l])=>`<button class="${tab===k?'on':''}" data-nav="${k}"><span class="i">${i}</span>${l}</button>`).join('')}
-  </div></nav>`;
+  </div></nav>`}`;
 }
+function vPick(){
+  return `${S.test?'<button class="btn ghost" data-nav="home" style="margin-bottom:14px">← 戻る</button>':''}
+  <p class="small" style="margin:0 2px 12px">チェックする原位置試験を選んでください。試験ごとに、点検項目と入力内容が別々に保存されます。</p>
+  <div class="stack">${Object.entries(TESTS).map(([id,d])=>{
+    const t=S.tests[id],hs=t?t.holes:[],done=hs.reduce((a,h)=>a+d.items.filter(x=>{const r=h.items[x.id];return r&&r.c&&r.i}).length,0),tot=hs.length*d.items.length;
+    const used=hs.some(h=>Object.keys(h.items).length||h.holeNo);
+    return `<button class="card" data-test="${id}" style="text-align:left;padding:0;cursor:pointer;margin:0;width:100%;border:${S.test===id?'2px solid var(--blue)':'1px solid var(--line)'}">
+      <div class="bd" style="display:flex;align-items:center;gap:14px;padding:16px">
+        <div style="font-size:34px">${d.icon}</div>
+        <div style="flex:1"><div style="font-weight:800;font-size:18px;color:var(--ink)">${esc(d.name)}</div>
+          <div class="small">段階検査シート ${d.no}／${d.items.length}項目</div>
+          ${used?`<div class="small" style="color:var(--blue);font-weight:700">入力中：${hs.length}孔・${done}/${tot}項目 完了</div>`:''}</div>
+        <div style="color:#94a3b8;font-size:22px">›</div></div></button>`}).join('')}</div>`}
 function holeChips(){return `<div class="chips">${S.holes.map((x,i)=>`<button class="chip ${i===S.active?'on':''}" data-hole="${i}">${esc(hname(x,i))}</button>`).join('')}<button class="chip" data-act="addHole">＋孔を追加</button></div>`}
 
 function vHome(){
   const h=hole(),pg=progress(h);
   return `
-  <div class="card"><div class="hd">試験基本情報（全孔共通）</div><div class="bd">
+  <div class="card"><div class="bd" style="display:flex;align-items:center;gap:12px;padding:12px 14px">
+    <div style="font-size:30px">${TESTS[S.test].icon}</div>
+    <div style="flex:1"><div class="small">チェック中の試験</div><div style="font-weight:800;font-size:18px">${esc(TITLE)}</div></div>
+    <button class="btn ghost sm" data-nav="pick">試験を変更</button></div></div>
+  <div class="card"><div class="hd">試験基本情報（全試験共通）</div><div class="bd">
     <div class="row"><div><label>工事番号</label><input type="text" data-p="no" value="${esc(S.project.no)}" placeholder="例: 238〇〇〇"></div>
     <div><label>略称</label><input type="text" data-p="name" value="${esc(S.project.name)}" placeholder="例: 〇〇ビル"></div></div>
     <label>オペレーター・試験者</label><input type="text" data-p="operator" value="${esc(S.project.operator)}" placeholder="氏名">
@@ -223,8 +294,8 @@ function vCheck(){
 
 /* ---- マニュアル ---- */
 function builtinManual(){
-  return `<div class="prose"><h3>孔内水平載荷試験（LLT）点検要点</h3>
-  <p>原位置試験段階検査シート（LLT欄）の確認項目を、実施順に整理したものです。</p>
+  return `<div class="prose"><h3>${esc(TITLE)} 点検要点</h3>
+  <p>${esc(SHEET)}の確認項目を、実施順に整理したものです。</p>
   ${['準備工','試験実施','試験後'].map(c=>`<h3>${c}</h3><ul>${ITEMS.filter(x=>x.cat===c).map(x=>`<li>${esc(x.title)}${x.hint?'<br><span class="small">※'+esc(x.hint)+'</span>':''}</li>`).join('')}</ul>`).join('')}
   <h3>記録の運用</h3><ul>
   <li>各項目について、試験者が「確認」、現場代理人が「検査」を行う。</li>
@@ -387,13 +458,13 @@ function llt3Manual(){
   <li>点検・校正は、使用頻度にもよるが、<b>概ね2年</b>を目安に周期的に行うことを推奨。</li>
   </ul>`)}
   </div>`}
-const BUILTIN=[
-  {id:'check',icon:'📘',title:TITLE+' 点検要点',sub:'チェックシート項目の整理（内蔵）',html:builtinManual},
-  {id:'llt3',icon:'📕',title:'AUTO LLT3 操作手順（要約）',sub:'応用計測サービス㈱ 取扱説明書の要点（内蔵）',html:llt3Manual}
-];
+function BUILTIN(){ // 選択中の試験に応じた内蔵マニュアル
+  const a=[{id:'check',icon:'📘',title:TITLE+' 点検要点',sub:'チェックシート項目の整理（内蔵）',html:builtinManual}];
+  if(S.test==='llt')a.push({id:'llt3',icon:'📕',title:'AUTO LLT3 操作手順（要約）',sub:'応用計測サービス㈱ 取扱説明書の要点（内蔵）',html:llt3Manual});
+  return a}
 function vManual(){
   return `<div class="card"><div class="bd" style="padding:0">
-    ${BUILTIN.map(b=>`<div class="mlist" data-man="${b.id}"><div class="ic">${b.icon}</div><div style="flex:1"><div class="tt">${esc(b.title)}</div><div class="ss">${esc(b.sub)}</div></div></div>`).join('')}
+    ${BUILTIN().map(b=>`<div class="mlist" data-man="${b.id}"><div class="ic">${b.icon}</div><div style="flex:1"><div class="tt">${esc(b.title)}</div><div class="ss">${esc(b.sub)}</div></div></div>`).join('')}
     ${S.manuals.map(m=>`<div class="mlist" data-man="${m.id}"><div class="ic">${m.type==='application/pdf'?'📄':'🖼️'}</div><div style="flex:1"><div class="tt">${esc(m.name)}</div><div class="ss">登録: ${esc(m.added)}</div></div><button class="btn red sm" data-delman="${m.id}">削除</button></div>`).join('')}
   </div></div>
   <button class="btn blue" data-act="addManual">＋ PDF・画像のマニュアルを登録</button>
@@ -401,7 +472,7 @@ function vManual(){
 }
 async function openManual(id){
   let body='',title='',blobUrl='';
-  const bm=BUILTIN.find(x=>x.id===id);
+  const bm=BUILTIN().find(x=>x.id===id);
   if(bm){title=bm.title;body=`<div style="padding:16px;max-width:720px;margin:0 auto">${bm.html()}</div>`}
   else{const m=S.manuals.find(x=>x.id===id),b=await DB.get('man:'+id);if(!b){toast('ファイルが見つかりません');return}
     title=m.name;blobUrl=URL.createObjectURL(new Blob([b],{type:m.type}));
@@ -435,7 +506,7 @@ function reportHTML(){
     <tr><td colspan="3">確認者（試験者）／確認日</td>${pad.map(h=>`<td colspan="3" class="c">${h?esc(h.confirmer||S.project.operator)+' ／ '+fdate(h.confirmDate):''}</td>`).join('')}</tr>
     <tr><td colspan="3">検査者（現場代理人）／検査日</td>${pad.map(h=>`<td colspan="3" class="c">${h?esc(h.inspector)+' ／ '+fdate(h.inspectDate):''}</td>`).join('')}</tr>
     <tr class="g"><th colspan="2">確認・検査項目</th><th>No</th>${pad.map(()=>'<th>確認</th><th>検査</th><th>対策</th>').join('')}</tr>
-    ${ITEMS.map(x=>`<tr><td class="cat">${x.id===1?'LLT':''}</td><td class="tt">${esc(x.title)}${x.hint?'<br><small>※'+esc(x.hint)+'</small>':''}</td><td class="c">${x.id}</td>
+    ${ITEMS.map(x=>`<tr><td class="cat">${x.id===1?esc(TESTS[S.test].short):''}</td><td class="tt">${esc(x.title)}${x.hint?'<br><small>※'+esc(x.hint)+'</small>':''}</td><td class="c">${x.id}</td>
       ${pad.map(h=>{if(!h)return'<td></td><td></td><td></td>';const r=h.items[x.id]||{};const val=r.val?`<div class="v">${esc(x.value.label.split('（')[0])}: ${esc(r.val)}${x.value.unit?' '+esc(x.value.unit):''}</div>`:'';
         return `<td class="c ${r.c==='ng'?'ng':''}">${cell(h,x,'c')}</td><td class="c ${r.i==='ng'?'ng':''}">${cell(h,x,'i')}${val}</td><td class="act">${esc(r.act||'')}</td>`}).join('')}</tr>`).join('')}
     </table>`}).join('<div style="height:14px"></div>');
@@ -454,7 +525,7 @@ function reportHTML(){
 function mailBody(){
   const ng=[];S.holes.forEach(h=>ITEMS.forEach(x=>{const r=h.items[x.id]||{};if(r.c==='ng'||r.i==='ng')ng.push(`・${hname(h,S.holes.indexOf(h))} No.${x.id} ${x.title}／対策: ${r.act||'未記入'}`)}));
   return `${SHEET} を送信します。\n\n工事番号: ${S.project.no}\n略称: ${S.project.name}\n試験者: ${S.project.operator}\n孔: ${S.holes.map(h=>(h.holeNo||'—')+(h.depth?'('+h.depth+'m)':'')).join(', ')}\n\n【否の項目】\n${ng.length?ng.join('\n'):'なし'}\n\n※詳細は添付のチェックシート（HTMLファイル）をご確認ください。`}
-const fileBase=()=>`LLT段階検査_${(S.project.no||'工事番号未入力').replace(/[\\/:*?"<>|]/g,'')}_${today()}`;
+const fileBase=()=>`${TITLE}_段階検査_${(S.project.no||'工事番号未入力').replace(/[\\/:*?"<>|]/g,'')}_${today()}`;
 
 async function preview(){
   const d=document.createElement('div');d.className='modal';
@@ -486,9 +557,10 @@ async function sendMail(){
 
 /* ============ イベント ============ */
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-nav],[data-stage],[data-hole],[data-act],[data-j],[data-ph],[data-delph],[data-view],[data-man],[data-delman]');if(!t)return;
+  const t=e.target.closest('[data-test],[data-nav],[data-stage],[data-hole],[data-act],[data-j],[data-ph],[data-delph],[data-view],[data-man],[data-delman]');if(!t)return;
   const D=t.dataset;
-  if(D.nav){tab=D.nav;render();scrollTo(0,0)}
+  if(D.test){selectTest(D.test);tab='home';save();render();scrollTo(0,0)}
+  else if(D.nav){tab=D.nav;render();scrollTo(0,0)}
   else if(D.stage){stage=D.stage;render();scrollTo(0,0)}
   else if(D.hole!==undefined){S.active=+D.hole;save();render()}
   else if(D.j){const [id,k,v]=D.j.split('|');const r=it(hole(),+id);r[k]=r[k]===v?null:v;
@@ -504,7 +576,7 @@ document.addEventListener('click',async e=>{
   else if(D.act==='saveNow'){await DB.set('state',S);toast('保存しました')}
   else if(D.act==='preview')preview();
   else if(D.act==='addManual')$('#manualIn').click();
-  else if(D.act==='backup'){const b=new Blob([JSON.stringify({state:S,man:await Promise.all(S.manuals.map(async m=>({id:m.id,data:await blobToB64(await DB.get('man:'+m.id))})))})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fileBase()+'_backup.json';a.click()}
+  else if(D.act==='backup'){syncTests();const b=new Blob([JSON.stringify({state:S,man:await Promise.all(S.manuals.map(async m=>({id:m.id,data:await blobToB64(await DB.get('man:'+m.id))})))})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fileBase()+'_backup.json';a.click()}
   else if(D.act==='restore')$('#restoreIn').click();
   else if(D.act==='reset'){if(confirm('点検データ（孔・写真）をすべて消去します。よろしいですか？\n（送信先・登録マニュアルは残ります）')){S.holes=[newHole()];S.active=0;S.project={no:'',name:'',operator:''};save();render();toast('消去しました')}}
 });
@@ -524,7 +596,7 @@ $('#manualIn').addEventListener('change',async e=>{const f=e.target.files[0];e.t
   const id=uid();await DB.set('man:'+id,await f.arrayBuffer());S.manuals.push({id,name:f.name,type:f.type||'application/pdf',added:today()});save();render();toast('マニュアルを登録しました')});
 $('#restoreIn').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const j=JSON.parse(await f.text());if(!j.state)throw 0;if(!confirm('現在のデータを上書きして復元します。よろしいですか？'))return;
-    S=Object.assign(S,j.state);for(const m of (j.man||[]))await DB.set('man:'+m.id,b64ToBuf(m.data));await DB.set('state',S);render();toast('復元しました')}catch(err){toast('復元に失敗しました')}});
+    applyState(j.state);for(const m of (j.man||[]))await DB.set('man:'+m.id,b64ToBuf(m.data));await DB.set('state',S);render();toast('復元しました')}catch(err){toast('復元に失敗しました')}});
 function blobToB64(buf){return new Promise(r=>{if(!buf)return r('');const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.readAsDataURL(new Blob([buf]))})}
 function b64ToBuf(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer}
 

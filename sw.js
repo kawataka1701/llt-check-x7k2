@@ -1,5 +1,5 @@
 // オフライン対応用。アプリを更新したら VERSION を変更すること（古いキャッシュが破棄される）
-const VERSION = 'llt-check-v3';
+const VERSION = 'llt-check-v5';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
