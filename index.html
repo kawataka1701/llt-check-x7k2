@@ -22,7 +22,7 @@ header .sub{font-size:12px;color:#cbd5e1}
 main{flex:1;padding:14px 14px 110px}
 nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
 nav .in{max-width:720px;margin:0 auto;display:flex}
-nav button{flex:1;border:0;background:none;padding:10px 4px 8px;font-size:11px;font-weight:700;color:#94a3b8;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px}
+nav button{flex:1;border:0;background:none;padding:10px 2px 8px;font-size:11px;font-weight:700;color:#94a3b8;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px}
 nav button span.i{font-size:22px;line-height:1}
 nav button.on{color:var(--blue)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
@@ -201,20 +201,19 @@ function resizeImage(file,max=1280,q=.72){return new Promise((res,rej)=>{const f
 
 /* ============ 画面 ============ */
 function render(){
-  const titles={pick:'試験の選択',home:'原位置試験チェック',check:'現場点検',manual:'マニュアル',set:'設定'};
+  const titles={pick:'試験の選択',home:'基本情報',check:'現場点検',manual:'マニュアル',set:'設定'};
   if(!S.test)tab='pick';
   const h=hole();
   $('#app').innerHTML=`
   <header><div><h1>${titles[tab]}</h1><div class="sub">${S.test?esc(TITLE)+(S.project.name?' ／ '+esc(S.project.name):''):'チェックする試験を選んでください'}</div></div>
-   ${S.test&&tab!=='pick'?`<button class="hbtn" data-nav="pick">⇄ 試験選択<small>${S.holes.length}孔</small></button>`:''}</header>
+   ${S.test&&tab!=='pick'?`<div class="sub" style="text-align:right">${S.holes.length}孔</div>`:''}</header>
   <main>${tab==='pick'?vPick():tab==='home'?vHome():tab==='check'?vCheck():tab==='manual'?vManual():vSet()}</main>
   ${!S.test?'':`<nav><div class="in">
-   ${[['home','🏠','ホーム'],['check','☑️','点検'],['manual','📖','マニュアル'],['set','⚙️','設定']].map(([k,i,l])=>`<button class="${tab===k?'on':''}" data-nav="${k}"><span class="i">${i}</span>${l}</button>`).join('')}
+   ${[['pick','🏠','ホーム'],['home','📝','基本情報'],['check','☑️','点検'],['manual','📖','マニュアル'],['set','⚙️','設定']].map(([k,i,l])=>`<button class="${tab===k?'on':''}" data-nav="${k}"><span class="i">${i}</span>${l}</button>`).join('')}
   </div></nav>`}`;
 }
 function vPick(){
-  return `${S.test?'<button class="btn ghost" data-nav="home" style="margin-bottom:14px">← 戻る</button>':''}
-  <p class="small" style="margin:0 2px 12px">チェックする原位置試験を選んでください。試験ごとに、点検項目と入力内容が別々に保存されます。</p>
+  return `<p class="small" style="margin:0 2px 12px">チェックする原位置試験を選んでください。試験ごとに、点検項目と入力内容が別々に保存されます。</p>
   <div class="stack">${Object.entries(TESTS).map(([id,d])=>{
     const t=S.tests[id],hs=t?t.holes:[],done=hs.reduce((a,h)=>a+d.items.filter(x=>{const r=h.items[x.id];return r&&r.c&&r.i}).length,0),tot=hs.length*d.items.length;
     const used=hs.some(h=>Object.keys(h.items).length||h.holeNo);
@@ -232,8 +231,7 @@ function vHome(){
   return `
   <div class="card"><div class="bd" style="display:flex;align-items:center;gap:12px;padding:12px 14px">
     <div style="font-size:30px">${TESTS[S.test].icon}</div>
-    <div style="flex:1"><div class="small">チェック中の試験</div><div style="font-weight:800;font-size:18px">${esc(TITLE)}</div></div>
-    <button class="btn ghost sm" data-nav="pick">試験を変更</button></div></div>
+    <div style="flex:1"><div class="small">チェック中の試験</div><div style="font-weight:800;font-size:18px">${esc(TITLE)}</div></div></div></div>
   <div class="card"><div class="hd">試験基本情報（全試験共通）</div><div class="bd">
     <div class="row"><div><label>工事番号</label><input type="text" data-p="no" value="${esc(S.project.no)}" placeholder="例: 238〇〇〇"></div>
     <div><label>略称</label><input type="text" data-p="name" value="${esc(S.project.name)}" placeholder="例: 〇〇ビル"></div></div>
